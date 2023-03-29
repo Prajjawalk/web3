@@ -30,7 +30,7 @@ var Common = require('@ethereumjs/common').default;
 var HardForks = require('@ethereumjs/common').Hardfork;
 var ethereumjsUtil = require('ethereumjs-util');
 const crypto = require("crypto");
-const dilithiumWallet = require('@theqrl/wallet.js');
+// const dilithiumWallet = require('@theqrl/wallet.js');
 const txHelper = require('./helper/tx')
 
 var isNot = function(value) {
@@ -126,7 +126,9 @@ Accounts.prototype._addAccountFunctions = function(account) {
 
 Accounts.prototype.create = function create(entropy) {
     // return this._addAccountFunctions(Account.create(entropy || utils.randomHex(32)));
-    return this._addAccountFunctions(dilithiumWallet.New());
+    import('@theqrl/wallet.js').then((dilithiumWallet) => {
+        return this._addAccountFunctions(dilithiumWallet.New());
+    })
 };
 
 Accounts.prototype.privateKeyToAccount = function privateKeyToAccount(privateKey, ignoreLength) {
@@ -140,7 +142,9 @@ Accounts.prototype.privateKeyToAccount = function privateKeyToAccount(privateKey
     }
 
     // return this._addAccountFunctions(Account.fromPrivate(privateKey));
-    return this._addAccountFunctions(dilithiumWallet.NewDilithiumFromSeed(privateKey))
+    return this._addAccountFunctions(import('@theqrl/wallet.js').then((dilithiumWallet) => {
+        return dilithiumWallet.NewDilithiumFromSeed(privateKey)})
+    )
 };
 
 Accounts.prototype.signTransaction = function signTransaction(tx, privateKey, callback) {
@@ -237,7 +241,8 @@ Accounts.prototype.signTransaction = function signTransaction(tx, privateKey, ca
             }
             // var ethTx = TransactionFactory.fromTxData(transaction, transactionOptions);
             // var signedTx = ethTx.sign(Buffer.from(privateKey, 'hex'));
-            let d = await dilithiumWallet.NewDilithiumFromSeed(Buffer.from(privateKey, 'hex'))
+            let dilithiumWallet = await import('@theqrl/wallet.js')
+            let d = dilithiumWallet.NewDilithiumFromSeed(Buffer.from(privateKey, 'hex'))
             await txHelper.SignTx(transaction, d)
             // var validationErrors = signedTx.validate(true);
 
@@ -479,6 +484,7 @@ Accounts.prototype.sign = async function sign(data, privateKey) {
     if (privateKey.length !== 98) {
         throw new Error("Private key must be 98 bytes long");
     }
+    let dilithiumWallet = await import('@theqrl/wallet.js')
     var dilithium_acc = await dilithiumWallet.NewDilithiumFromSeed(Buffer.from(privateKey, 'hex'))
 
     var hash = this.hashMessage(data);
